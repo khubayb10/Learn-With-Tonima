@@ -1,0 +1,60 @@
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Send } from "lucide-react";
+import axios from "axios";
+
+const Chatbot = () => {
+  const [messages, setMessages] = useState([
+    { sender: "Learn With Tonima", text: "Hi, I'm Learn With Tonima! How can I help you?" }
+  ]);
+  const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
+
+  const fetchAnswer = async (query) => {
+    setTyping(true);
+    try {
+      const response = await axios.post("http://localhost:5000/api/chatbot", { query });
+      setMessages((prev) => [...prev, { sender: "Learn With Tonima", text: response.data.answer }]);
+    } catch (error) {
+      setMessages((prev) => [...prev, { sender: "Learn With Tonima", text: "Sorry, I couldn't process that." }]);
+    }
+    setTyping(false);
+  };
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    setMessages((prev) => [...prev, { sender: "You", text: input }]);
+    fetchAnswer(input);
+    setInput("");
+  };
+
+  return (
+    <Card className="fixed bottom-5 right-5 w-80 shadow-lg rounded-2xl overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <img src="https://blogger.googleusercontent.com/img/a/AVvXsEjHFlHn2qrLqNndaG47lvmhfciIIhcRXG6h9VF8TI5s_zkS2U8N4LNvoyLQDwN3WiQArT7ktClOLpiRDe7z1jwoh1Uqz_H3M7MrI6pHffbV8HPcowZg0K1K80J-homnnn_mzwS6xHmzmh6o51W61eaIlaZkXHaNX84WQZgGH0ikoo1D5V-z6k1d29D0jr0=s150" className="w-10 h-10 rounded-full" alt="Chatbot Logo" />
+          <span className="text-lg font-semibold">Learn With Tonima</span>
+        </div>
+        <div className="h-60 overflow-y-auto border p-2 rounded-lg bg-gray-100">
+          {messages.map((msg, index) => (
+            <motion.div key={index} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`mb-2 p-2 rounded-lg ${msg.sender === "You" ? "bg-blue-500 text-white ml-auto" : "bg-white text-black"}`}>
+              <strong>{msg.sender}:</strong> {msg.text}
+            </motion.div>
+          ))}
+          {typing && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-gray-500">Learn With Tonima is typing...</motion.div>}
+        </div>
+        <div className="flex items-center gap-2 mt-3">
+          <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type a message..." className="flex-1" />
+          <Button onClick={handleSend} disabled={typing}>
+            <Send size={18} />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default Chatbot;
